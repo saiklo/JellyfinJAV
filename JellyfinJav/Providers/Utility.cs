@@ -3,13 +3,9 @@ namespace JellyfinJav.Providers
     using MediaBrowser.Controller.Entities;
     using MediaBrowser.Controller.Library;
     using MediaBrowser.Controller.Providers;
-    using System.Drawing;
-    using System.Drawing.Imaging;
     using System.IO;
     using System.Linq;
-    using System.Net.Http;
     using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
 
     /// <summary>A general utility class for random functions.</summary>
     public static class Utility
@@ -110,36 +106,5 @@ namespace JellyfinJav.Providers
             };
         }
 
-        /// <summary>Crops a full size dvd cover into just the front cover image.</summary>
-        /// <param name="httpResponse">The full size dvd cover's http response.</param>
-        /// <returns>An empty task when the job is done.</returns>
-        public static async Task CropThumb(HttpResponseMessage httpResponse)
-        {
-            using (var imageStream = await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false))
-            {
-                using var originalImageBitmap = new Bitmap(imageStream);
-                var subsetWidth = 379;
-                var subsetHeight = 538;
-
-                // create a new bitmap with the desired dimensions
-                using (var subset = new Bitmap(subsetWidth, subsetHeight))
-                {
-                    // draw original image to new bitmap starting from x=421 and y=0
-                    using (Graphics gfx = Graphics.FromImage(subset))
-                    {
-                        Rectangle srcRect = new Rectangle(421, 0, subsetWidth, subsetHeight);
-                        gfx.DrawImage(originalImageBitmap, 0, 0, srcRect, GraphicsUnit.Pixel);
-                    }
-
-                    var finalStream = File.Open(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".jpg"), FileMode.Create);
-                    subset.Save(finalStream, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    finalStream.Seek(0, SeekOrigin.Begin);
-
-                    var newContent = new StreamContent(finalStream);
-                    newContent.Headers.ContentType = httpResponse.Content.Headers.ContentType;
-                    httpResponse.Content = newContent;
-                }
-            }
-        }
     }
 }

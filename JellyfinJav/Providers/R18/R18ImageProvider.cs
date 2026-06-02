@@ -38,44 +38,39 @@ namespace JellyfinJav.Providers.R18Provider
                 return Array.Empty<RemoteImageInfo>();
             }
 
-            var primaryImageFormats = new[]
+            // ps.jpg is the pre-cropped front cover; pl.jpg is the full jacket (front + back).
+            // Prefer ps.jpg so Jellyfin gets a clean poster without needing any image manipulation.
+            var candidateUrls = new[]
             {
+                $"https://awsimgsrc.dmm.com/dig/digital/video/{id}/{id}ps.jpg",
+                $"https://pics.dmm.co.jp/mono/movie/adult/{id}/{id}ps.jpg",
+                $"https://awsimgsrc.dmm.com/dig/mono/movie/{id}/{id}ps.jpg",
                 $"https://awsimgsrc.dmm.com/dig/digital/video/{id}/{id}pl.jpg",
                 $"https://pics.dmm.co.jp/mono/movie/adult/{id}/{id}pl.jpg",
-                $"https://awsimgsrc.dmm.com/dig/mono/movie/{id}/{id}pl.jpg",
             };
 
-            var primaryImage = await this.GetValidImageUrl(primaryImageFormats, cancelToken);
+            var primaryImage = await this.GetValidImageUrl(candidateUrls, cancelToken);
 
             if (string.IsNullOrEmpty(primaryImage))
             {
-                // If no valid image URL is found, return the fallback URL
-                primaryImage = $"https://awsimgsrc.dmm.com/dig/digital/video/{id}/{id}pl.jpg";
-            }
-
-            if (string.IsNullOrEmpty(primaryImage))
-            {
-                // If the primary image URL is empty, return an empty collection
                 return Array.Empty<RemoteImageInfo>();
             }
 
             return new[]
             {
-        new RemoteImageInfo
-        {
-            ProviderName = this.Name,
-            Type = ImageType.Primary,
-            Url = primaryImage,
-        },
+                new RemoteImageInfo
+                {
+                    ProviderName = this.Name,
+                    Type = ImageType.Primary,
+                    Url = primaryImage,
+                },
             };
         }
 
         /// <inheritdoc />
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancelToken)
         {
-            var httpResponse = await HttpClient.GetAsync(url, cancelToken).ConfigureAwait(false);
-            await Utility.CropThumb(httpResponse).ConfigureAwait(false);
-            return httpResponse;
+            return await HttpClient.GetAsync(url, cancelToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />

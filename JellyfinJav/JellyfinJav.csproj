@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net80</TargetFramework>
-    <AssemblyVersion>2026.06.02.3</AssemblyVersion>
-    <FileVersion>2026.06.02.3</FileVersion>
+    <AssemblyVersion>2026.06.02.4</AssemblyVersion>
+    <FileVersion>2026.06.02.4</FileVersion>
     <NoWarn>SA1633</NoWarn>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
@@ -22,7 +22,6 @@
     <PackageReference Include="FlareSolverrSharp" Version="3.0.7" />
     <PackageReference Include="Jellyfin.Controller" Version="10.10.7" />
     <PackageReference Include="Jellyfin.Model" Version="10.10.7" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 

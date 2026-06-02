@@ -8,6 +8,14 @@
         "overview": "JAV metadata providers for Jellyfin.",
         "versions": [
             {
+                "checksum": "4ac957f0cffb5478786d944bba925f54",
+                "changelog": "",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/saiklo/JellyfinJAV/releases/download/2026.06.02.4/jellyfinjav_2026.06.02.4.zip",
+                "timestamp": "2026-06-02T15:41:48Z",
+                "version": "2026.06.02.4"
+            },
+            {
                 "checksum": "ddba25c8a060ba2f341c99e5bffc6743",
                 "changelog": "",
                 "targetAbi": "10.10.7.0",
