@@ -9,10 +9,8 @@ namespace JellyfinJav.Providers.R18Provider
     using System.Threading.Tasks;
     using Jellyfin.Data.Enums;
     using JellyfinJav.Api;
-    using JellyfinJav.Providers;
     using MediaBrowser.Controller.Entities;
     using MediaBrowser.Controller.Entities.Movies;
-    using MediaBrowser.Controller.Library;
     using MediaBrowser.Controller.Providers;
     using MediaBrowser.Model.Entities;
     using MediaBrowser.Model.Providers;
@@ -22,19 +20,16 @@ namespace JellyfinJav.Providers.R18Provider
     public class R18Provider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
     {
         private static readonly HttpClient HttpClient = new HttpClient();
-        private readonly ILibraryManager libraryManager;
         private readonly ILogger<R18Provider> logger;
 
-#pragma warning disable SA1614 // Element parameter documentation should have text
+#pragma warning disable SA1614
         /// <summary>
         /// Initializes a new instance of the <see cref="R18Provider"/> class.
         /// </summary>
-        /// <param name="libraryManager"></param>
         /// <param name="logger"></param>
-        public R18Provider(ILibraryManager libraryManager, ILogger<R18Provider> logger)
-#pragma warning restore SA1614 // Element parameter documentation should have text
+        public R18Provider(ILogger<R18Provider> logger)
+#pragma warning restore SA1614
         {
-            this.libraryManager = libraryManager;
             this.logger = logger;
         }
 
@@ -47,25 +42,22 @@ namespace JellyfinJav.Providers.R18Provider
         /// <inheritdoc />
         public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancelToken)
         {
-            var originalTitle = Utility.GetVideoOriginalTitle(info, this.libraryManager);
-            info.Name = originalTitle;
-
-            this.logger.LogInformation("[JellyfinJav] R18 - originalTitle: " + originalTitle);
+            this.logger.LogInformation("[JellyfinJav] R18 - processing: " + info.Name);
 
             Api.Video? video;
             if (info.ProviderIds.ContainsKey("R18"))
             {
-                video = await R18Client.LoadVideo(info.ProviderIds["R18"]).ConfigureAwait(false);
                 this.logger.LogInformation("[JellyfinJav] R18 - Loading by ID: " + info.ProviderIds["R18"]);
+                video = await R18Client.LoadVideo(info.ProviderIds["R18"]).ConfigureAwait(false);
             }
             else
             {
-                // Prefer extracting from the raw file path — it's unaffected by prior metadata rewrites.
+                // Use the raw file path — unaffected by any prior metadata rewrite of info.Name.
                 var fileName = string.IsNullOrEmpty(info.Path)
-                    ? originalTitle
+                    ? info.Name
                     : Path.GetFileNameWithoutExtension(info.Path);
 
-                var code = Utility.ExtractCodeFromFilename(fileName);
+                var code = Providers.Utility.ExtractCodeFromFilename(fileName);
                 if (code is null)
                 {
                     this.logger.LogInformation("[JellyfinJav] R18 - No JAV code found in: " + fileName);
@@ -89,7 +81,7 @@ namespace JellyfinJav.Providers.R18Provider
                 Item = new Movie
                 {
                     OriginalTitle = info.Name,
-                    Name = Utility.CreateVideoDisplayName(video.Value),
+                    Name = Providers.Utility.CreateVideoDisplayName(video.Value),
                     PremiereDate = video.Value.ReleaseDate,
                     ProductionYear = video.Value.ReleaseDate?.Year,
                     ProviderIds = new Dictionary<string, string> { { "R18", video.Value.Id } },
@@ -110,12 +102,11 @@ namespace JellyfinJav.Providers.R18Provider
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo info, CancellationToken cancelToken)
         {
-            // Use the raw file path for code extraction when available.
             var fileName = string.IsNullOrEmpty(info.Path)
                 ? info.Name
                 : Path.GetFileNameWithoutExtension(info.Path);
 
-            var javCode = Utility.ExtractCodeFromFilename(fileName);
+            var javCode = Providers.Utility.ExtractCodeFromFilename(fileName);
             if (string.IsNullOrEmpty(javCode))
             {
                 return Array.Empty<RemoteSearchResult>();
