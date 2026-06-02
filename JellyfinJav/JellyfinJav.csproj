@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net80</TargetFramework>
-    <AssemblyVersion>2025.05.17</AssemblyVersion>
-    <FileVersion>2025.05.17</FileVersion>
+    <AssemblyVersion>2026.06.02</AssemblyVersion>
+    <FileVersion>2026.06.02</FileVersion>
     <NoWarn>SA1633</NoWarn>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>

@@ -4,9 +4,17 @@
         "guid": "1d5fffc2-1028-4553-9660-bd4966899e44",
         "name": "JellyfinJAV",
         "description": "JAV metadata providers for Jellyfin.",
-        "owner": "kyuhaku (current), imaginary-upside (former)",
+        "owner": "saiklo (fork of kyuhaku)",
         "overview": "JAV metadata providers for Jellyfin.",
         "versions": [
+            {
+                "checksum": "88c20acc9b9141fc9a027b9105af8b85",
+                "changelog": "Improved filename code extraction: optional hyphen, trailing suffix stripping, DSVR -> 3DSVR remapping.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/saiklo/JellyfinJAV/releases/download/2026.06.02/jellyfinjav_2026.06.02.zip",
+                "timestamp": "2026-06-02T00:00:00Z",
+                "version": "2026.06.02"
+            },
             {
                 "checksum": "a286e17d15611ce24d0a880c7f85589b",
                 "changelog": "",
