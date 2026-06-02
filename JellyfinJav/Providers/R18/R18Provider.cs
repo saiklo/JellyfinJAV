@@ -2,12 +2,14 @@ namespace JellyfinJav.Providers.R18Provider
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Jellyfin.Data.Enums;
     using JellyfinJav.Api;
+    using JellyfinJav.Providers;
     using MediaBrowser.Controller.Entities;
     using MediaBrowser.Controller.Entities.Movies;
     using MediaBrowser.Controller.Library;
@@ -54,24 +56,29 @@ namespace JellyfinJav.Providers.R18Provider
             if (info.ProviderIds.ContainsKey("R18"))
             {
                 video = await R18Client.LoadVideo(info.ProviderIds["R18"]).ConfigureAwait(false);
-                this.logger.LogInformation("[JellyfinJav] R18 - Scanning Video: " + video);
+                this.logger.LogInformation("[JellyfinJav] R18 - Loading by ID: " + info.ProviderIds["R18"]);
             }
             else
             {
-                var code = Utility.ExtractCodeFromFilename(originalTitle);
+                // Prefer extracting from the raw file path — it's unaffected by prior metadata rewrites.
+                var fileName = string.IsNullOrEmpty(info.Path)
+                    ? originalTitle
+                    : Path.GetFileNameWithoutExtension(info.Path);
+
+                var code = Utility.ExtractCodeFromFilename(fileName);
                 if (code is null)
                 {
-                    this.logger.LogInformation("[JellyfinJav] R18 - Code is NULL " + code + "|" + originalTitle);
+                    this.logger.LogInformation("[JellyfinJav] R18 - No JAV code found in: " + fileName);
                     return new MetadataResult<Movie>();
                 }
 
+                this.logger.LogInformation("[JellyfinJav] R18 - Searching r18.dev for: " + code);
                 video = await R18Client.SearchFirst(code).ConfigureAwait(false);
-                this.logger.LogInformation("[JellyfinJav] R18 - Searching r18.dev: " + video);
             }
 
             if (!video.HasValue)
             {
-                this.logger.LogInformation("[JellyfinJav] R18 - Oh Noes!" + video);
+                this.logger.LogInformation("[JellyfinJav] R18 - No result found");
                 return new MetadataResult<Movie>();
             }
 
@@ -84,11 +91,12 @@ namespace JellyfinJav.Providers.R18Provider
                     OriginalTitle = info.Name,
                     Name = Utility.CreateVideoDisplayName(video.Value),
                     PremiereDate = video.Value.ReleaseDate,
+                    ProductionYear = video.Value.ReleaseDate?.Year,
                     ProviderIds = new Dictionary<string, string> { { "R18", video.Value.Id } },
-                    Studios = new[] { video.Value.Studio },
+                    Studios = video.Value.Studio != null ? new[] { video.Value.Studio } : Array.Empty<string>(),
                     Genres = video.Value.Genres.ToArray(),
                 },
-                People = AddActressesToPeople(video.Value),
+                People = BuildPeople(video.Value),
                 HasMetadata = true,
             };
         }
@@ -96,31 +104,33 @@ namespace JellyfinJav.Providers.R18Provider
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo info, CancellationToken cancelToken)
         {
-            var javCode = Utility.ExtractCodeFromFilename(info.Name);
+            // Use the raw file path for code extraction when available.
+            var fileName = string.IsNullOrEmpty(info.Path)
+                ? info.Name
+                : Path.GetFileNameWithoutExtension(info.Path);
+
+            var javCode = Utility.ExtractCodeFromFilename(fileName);
             if (string.IsNullOrEmpty(javCode))
             {
                 return Array.Empty<RemoteSearchResult>();
             }
 
-            this.logger.LogInformation("[JellyfinJav] R18 - Getting Code: " + javCode);
+            this.logger.LogInformation("[JellyfinJav] R18 - Search for code: " + javCode);
 
-            var searchResults = await R18Client.Search(javCode);
+            var searchResults = await R18Client.Search(javCode).ConfigureAwait(false);
 
             if (searchResults == null || !searchResults.Any())
             {
-                this.logger.LogInformation("[JellyfinJav] R18 - No results found for code: " + javCode);
-                return Array.Empty<RemoteSearchResult>(); // Return an empty collection, not null
+                this.logger.LogInformation("[JellyfinJav] R18 - No results found for: " + javCode);
+                return Array.Empty<RemoteSearchResult>();
             }
 
             return searchResults.Select(video => new RemoteSearchResult
             {
                 Name = video.Code,
-                ProviderIds = new Dictionary<string, string>
-        {
-            { "R18", video.Id },
-        },
+                ProviderIds = new Dictionary<string, string> { { "R18", video.Id } },
                 ImageUrl = video.Cover?.ToString(),
-            }).ToList();  // Convert to a List to avoid potential issues
+            }).ToList();
         }
 
         /// <inheritdoc />
@@ -139,37 +149,29 @@ namespace JellyfinJav.Providers.R18Provider
             return name;
         }
 
-        private List<PersonInfo> AddActressesToPeople(Api.Video video)
+        private List<PersonInfo> BuildPeople(Api.Video video)
         {
             var people = new List<PersonInfo>();
 
-            if (video.Actresses == null || !video.Actresses.Any())
+            if (!string.IsNullOrWhiteSpace(video.Director))
             {
-                this.logger.LogInformation("[JellyfinJav] R18 - No actresses found in video metadata.");
-                return people;
+                PeopleHelper.AddPerson(people, new PersonInfo
+                {
+                    Name = video.Director,
+                    Type = PersonKind.Director,
+                });
             }
 
-            foreach (var actress in video.Actresses)
+            foreach (var actress in video.Actresses ?? Enumerable.Empty<string>())
             {
-                var person = new PersonInfo
+                PeopleHelper.AddPerson(people, new PersonInfo
                 {
                     Name = NormalizeActressName(actress),
-                    Type = PersonKind.Actor
-                };
-                AddPerson(person, people);
+                    Type = PersonKind.Actor,
+                });
             }
 
             return people;
-        }
-
-        private void AddPerson(PersonInfo p, List<PersonInfo> people)
-        {
-            if (people == null)
-            {
-                people = new List<PersonInfo>();
-            }
-
-            PeopleHelper.AddPerson(people, p);
         }
     }
 }

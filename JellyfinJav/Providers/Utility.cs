@@ -14,6 +14,17 @@ namespace JellyfinJav.Providers
     /// <summary>A general utility class for random functions.</summary>
     public static class Utility
     {
+        // Matches the base JAV code: letters optionally followed by a dash then 2-5 digits.
+        private static readonly Regex JavCodeRegex = new Regex(
+            @"([A-Za-z]+)-?(\d{2,5})",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // Matches common multi-part suffixes that appear after the code:
+        // -1, -2, pt1, pt2, part1, a, b, c, cd1, disc2 ...
+        private static readonly Regex PartSuffixRegex = new Regex(
+            @"^[-_\s]*(pt|part|cd|disc|disk)?[-_\s]*([0-9]+|[a-d])$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// When setting the video title in a Provider, we lose the JAV code details in MovieInfo.
         /// So this is used to retrieve the JAV code to then be able to search using a different Provider.
@@ -37,27 +48,53 @@ namespace JellyfinJav.Providers
             return result.OriginalTitle ?? result.Name;
         }
 
-        /// <summary>Extracts the jav code from a video's filename.</summary>
-        /// <param name="filename">The video's filename.</param>
-        /// <returns>The video's jav code.</returns>
+        /// <summary>Extracts the jav code from a video's filename, stripping any multi-part suffix.</summary>
+        /// <param name="filename">The video's filename (without extension).</param>
+        /// <returns>The normalized JAV code (e.g. MIDE-001), or null if not found.</returns>
         public static string? ExtractCodeFromFilename(string filename)
         {
-            var rx = new Regex(@"([A-Za-z]+)-?(\d+)(?:-\d+)?(?:[A-Za-z]+)?", RegexOptions.Compiled);
-            var match = rx.Match(filename);
-            if (match.Success)
+            var (code, _, _) = ExtractCodeAndPartFromFilename(filename);
+            return code;
+        }
+
+        /// <summary>
+        /// Extracts the JAV code and detects multi-part suffixes (pt1, pt2, -1, -2, a, b, etc.).
+        /// </summary>
+        /// <param name="filename">The video's filename (without extension).</param>
+        /// <returns>
+        /// A tuple of (Code, IsMultiPart, PartNumber).
+        /// PartNumber is 1-based: 'a'=1, 'b'=2, or the numeric suffix.
+        /// </returns>
+        public static (string? Code, bool IsMultiPart, int? PartNumber) ExtractCodeAndPartFromFilename(string filename)
+        {
+            var match = JavCodeRegex.Match(filename);
+            if (!match.Success)
             {
-                string letters = match.Groups[1].Value;
-                string digits = match.Groups[2].Value;
-
-                letters = letters.ToUpper();
-
-                if (letters == "DSVR")
-                    letters = "3DSVR";
-
-                return $"{letters}-{digits}";
+                return (null, false, null);
             }
 
-            return filename;
+            string letters = match.Groups[1].Value.ToUpperInvariant();
+            string digits = match.Groups[2].Value;
+
+            if (letters == "DSVR")
+            {
+                letters = "3DSVR";
+            }
+
+            string code = $"{letters}-{digits}";
+            string remainder = filename.Substring(match.Index + match.Length);
+
+            var partMatch = PartSuffixRegex.Match(remainder);
+            if (partMatch.Success)
+            {
+                string partStr = partMatch.Groups[2].Value;
+                int partNumber = int.TryParse(partStr, out int n)
+                    ? n
+                    : (partStr.ToLowerInvariant()[0] - 'a' + 1);
+                return (code, true, partNumber);
+            }
+
+            return (code, false, null);
         }
 
         /// <summary>Creates a video's display name according to the plugin's selected configuration.</summary>

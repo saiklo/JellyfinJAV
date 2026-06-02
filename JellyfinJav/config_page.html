@@ -34,6 +34,17 @@
                             <span>Enable Actresses</span>
                         </label>
                     </div>
+                    <div class="checkboxContainer checkboxContainer-withDescripton">
+                        <label class="emby-checkbox-label">
+                            <input id="enableCollectionGrouping" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
+                            <span>Enable Multi-Part Collection Grouping</span>
+                        </label>
+                        <div class="fieldDescription">
+                            After each library scan, movies that share the same R18 content ID (multi-part files
+                            such as those ending in pt1/pt2, a/b, -1/-2, etc.) are automatically combined into
+                            a Jellyfin box-set collection.
+                        </div>
+                    </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -50,6 +61,7 @@
                     $('#actressNameOrder').val(config.actressNameOrder).change();
                     $('#videoDisplayName').val(config.videoDisplayName).change();
                     document.getElementById('enableActresses').checked = config.enableActresses;
+                    document.getElementById('enableCollectionGrouping').checked = config.enableCollectionGrouping;
                 });
             });
 
@@ -58,6 +70,7 @@
                     config.actressNameOrder = $('#actressNameOrder').val();
                     config.videoDisplayName = $('#videoDisplayName').val();
                     config.enableActresses = document.getElementById('enableActresses').checked;
+                    config.enableCollectionGrouping = document.getElementById('enableCollectionGrouping').checked;
 
                     ApiClient.updatePluginConfiguration(pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);

@@ -34,6 +34,12 @@ namespace JellyfinJav.Api
         /// <summary>The date which the video was released.</summary>
         public readonly DateTime? ReleaseDate;
 
+        /// <summary>The director of the video.</summary>
+        public readonly string? Director;
+
+        /// <summary>The series this video belongs to.</summary>
+        public readonly string? Series;
+
         /// <summary>Initializes a new instance of the <see cref="Video" /> struct.</summary>
         /// <param name="id">The website-specific identifier.</param>
         /// <param name="code">The jav code. Ex: ABP-001.</param>
@@ -44,6 +50,8 @@ namespace JellyfinJav.Api
         /// <param name="boxArt">An absolute url to the boxart.</param>
         /// <param name="cover">An absolute url to the cover image.</param>
         /// <param name="releaseDate">The date which the video was released.</param>
+        /// <param name="director">The director of the video.</param>
+        /// <param name="series">The series this video belongs to.</param>
         public Video(
             string id,
             string code,
@@ -53,7 +61,9 @@ namespace JellyfinJav.Api
             string? studio,
             string? boxArt,
             string? cover,
-            DateTime? releaseDate)
+            DateTime? releaseDate,
+            string? director = null,
+            string? series = null)
         {
             this.Id = id;
             this.Code = code;
@@ -64,6 +74,8 @@ namespace JellyfinJav.Api
             this.BoxArt = boxArt;
             this.Cover = cover;
             this.ReleaseDate = releaseDate;
+            this.Director = director;
+            this.Series = series;
         }
 
         /// <summary>Checks if two Video objects are equal.</summary>
@@ -102,7 +114,9 @@ namespace JellyfinJav.Api
                    $"Studio: {this.Studio}\n" +
                    $"BoxArt: {this.BoxArt}\n" +
                    $"Cover: {this.Cover}\n" +
-                   $"ReleaseDate: {this.ReleaseDate}\n";
+                   $"ReleaseDate: {this.ReleaseDate}\n" +
+                   $"Director: {this.Director}\n" +
+                   $"Series: {this.Series}\n";
         }
 
         /// <inheritdoc />

@@ -33,5 +33,11 @@ namespace JellyfinJav
 
         /// <summary>Gets or sets a value indicating whether to enable actress metadata fetching.</summary>
         public bool EnableActresses { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to automatically group multi-part movies
+        /// (files sharing the same R18 content ID) into Jellyfin box-set collections after each library scan.
+        /// </summary>
+        public bool EnableCollectionGrouping { get; set; } = true;
     }
 }
