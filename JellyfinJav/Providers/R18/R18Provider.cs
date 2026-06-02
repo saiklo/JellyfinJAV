@@ -84,7 +84,7 @@ namespace JellyfinJav.Providers.R18Provider
 
             this.logger.LogInformation("[JellyfinJav] R18 - Found metadata: " + video);
 
-            return new MetadataResult<Movie>
+            var result = new MetadataResult<Movie>
             {
                 Item = new Movie
                 {
@@ -96,9 +96,15 @@ namespace JellyfinJav.Providers.R18Provider
                     Studios = video.Value.Studio != null ? new[] { video.Value.Studio } : Array.Empty<string>(),
                     Genres = video.Value.Genres.ToArray(),
                 },
-                People = BuildPeople(video.Value),
                 HasMetadata = true,
             };
+
+            foreach (var person in BuildPeople(video.Value))
+            {
+                result.AddPerson(person);
+            }
+
+            return result;
         }
 
         /// <inheritdoc />
