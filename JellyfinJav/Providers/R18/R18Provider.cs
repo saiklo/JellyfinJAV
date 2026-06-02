@@ -91,6 +91,7 @@ namespace JellyfinJav.Providers.R18Provider
                     ProviderIds = new Dictionary<string, string> { { "R18", video.Value.Id } },
                     Studios = video.Value.Studio != null ? new[] { video.Value.Studio } : Array.Empty<string>(),
                     Genres = video.Value.Genres.ToArray(),
+                    Tags = video.Value.Genres.ToArray(),
                     Tagline = video.Value.Series,
                 },
                 HasMetadata = true,
