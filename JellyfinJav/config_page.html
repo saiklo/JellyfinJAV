@@ -45,6 +45,21 @@
                             a Jellyfin box-set collection.
                         </div>
                     </div>
+                    <div class="checkboxContainer checkboxContainer-withDescripton">
+                        <label class="emby-checkbox-label">
+                            <input id="enableFlareSolverr" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
+                            <span>Enable FlareSolverr</span>
+                        </label>
+                        <div class="fieldDescription">
+                            Use a FlareSolverr instance to bypass Cloudflare protection when r18.dev returns
+                            403 Forbidden. Requires a running FlareSolverr service (e.g. as a Docker container).
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="flareSolverrUrl">FlareSolverr URL</label>
+                        <input id="flareSolverrUrl" type="text" is="emby-input" placeholder="http://localhost:8191" />
+                        <div class="fieldDescription">URL of your FlareSolverr instance.</div>
+                    </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -62,6 +77,8 @@
                     $('#videoDisplayName').val(config.videoDisplayName).change();
                     document.getElementById('enableActresses').checked = config.enableActresses;
                     document.getElementById('enableCollectionGrouping').checked = config.enableCollectionGrouping;
+                    document.getElementById('enableFlareSolverr').checked = config.enableFlareSolverr;
+                    document.getElementById('flareSolverrUrl').value = config.flareSolverrUrl || 'http://localhost:8191';
                 });
             });
 
@@ -71,6 +88,8 @@
                     config.videoDisplayName = $('#videoDisplayName').val();
                     config.enableActresses = document.getElementById('enableActresses').checked;
                     config.enableCollectionGrouping = document.getElementById('enableCollectionGrouping').checked;
+                    config.enableFlareSolverr = document.getElementById('enableFlareSolverr').checked;
+                    config.flareSolverrUrl = document.getElementById('flareSolverrUrl').value;
 
                     ApiClient.updatePluginConfiguration(pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);

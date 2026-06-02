@@ -39,5 +39,16 @@ namespace JellyfinJav
         /// (files sharing the same R18 content ID) into Jellyfin box-set collections after each library scan.
         /// </summary>
         public bool EnableCollectionGrouping { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to use a FlareSolverr instance to bypass
+        /// Cloudflare protection when r18.dev returns 403 Forbidden.
+        /// </summary>
+        public bool EnableFlareSolverr { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the URL of the FlareSolverr instance (e.g. http://localhost:8191).
+        /// </summary>
+        public string FlareSolverrUrl { get; set; } = "http://localhost:8191";
     }
 }

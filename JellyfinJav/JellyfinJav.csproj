@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net80</TargetFramework>
-    <AssemblyVersion>2026.06.02.8</AssemblyVersion>
-    <FileVersion>2026.06.02.8</FileVersion>
+    <AssemblyVersion>2026.06.02.10</AssemblyVersion>
+    <FileVersion>2026.06.02.10</FileVersion>
     <NoWarn>SA1633</NoWarn>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.1.2" />
+    <PackageReference Include="FlareSolverrSharp" Version="3.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Jellyfin.Controller" Version="10.10.7" />
     <PackageReference Include="Jellyfin.Model" Version="10.10.7" />
