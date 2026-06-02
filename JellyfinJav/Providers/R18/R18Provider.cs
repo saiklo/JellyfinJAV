@@ -80,13 +80,18 @@ namespace JellyfinJav.Providers.R18Provider
             {
                 Item = new Movie
                 {
-                    OriginalTitle = info.Name,
+                    OriginalTitle = video.Value.TitleJa ?? info.Name,
                     Name = Providers.Utility.CreateVideoDisplayName(video.Value),
+                    Overview = video.Value.Description,
                     PremiereDate = video.Value.ReleaseDate,
                     ProductionYear = video.Value.ReleaseDate?.Year,
+                    RunTimeTicks = video.Value.RuntimeMinutes.HasValue
+                        ? TimeSpan.FromMinutes(video.Value.RuntimeMinutes.Value).Ticks
+                        : (long?)null,
                     ProviderIds = new Dictionary<string, string> { { "R18", video.Value.Id } },
                     Studios = video.Value.Studio != null ? new[] { video.Value.Studio } : Array.Empty<string>(),
                     Genres = video.Value.Genres.ToArray(),
+                    Tagline = video.Value.Series,
                 },
                 HasMetadata = true,
             };

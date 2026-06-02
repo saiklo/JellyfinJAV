@@ -146,17 +146,21 @@ namespace JellyfinJav.Api
 
             string? code = json["dvd_id"]?.ToString();
             string? title = json["title_en"]?.ToString();
+            string? titleJa = json["title_ja"]?.ToString();
+
             var actressesToken = json["actresses"];
             var actresses = actressesToken != null
                 ? actressesToken.Select(c => c["name_romaji"]?.ToString() ?? string.Empty).Where(n => !string.IsNullOrWhiteSpace(n))
                 : Enumerable.Empty<string>();
+
             var categoriesToken = json["categories"];
             var genres = categoriesToken != null
                 ? categoriesToken.Select(c => c["name_en"]?.ToString() ?? string.Empty).Where(g => !string.IsNullOrWhiteSpace(g) && NotSaleGenre(g))
                 : Enumerable.Empty<string>();
+
             string? studio = json["label_name_en"]?.ToString() ?? json["maker_name_en"]?.ToString();
             string? cover = json["jacket_full_url"]?.ToString();
-            string? boxArt = cover?.Replace("pl.jpg", "ps.jpg");
+            string? coverThumb = json["jacket_thumb_url"]?.ToString();
 
             string? dateString = json["release_date"]?.ToString();
             DateTime? releaseDate = null;
@@ -166,23 +170,25 @@ namespace JellyfinJav.Api
                 releaseDate = parsedDate;
             }
 
-            // Director: field may be a string or an array of objects
-            string? director = null;
-            var directorToken = json["director"];
-            if (directorToken != null)
-            {
-                if (directorToken.Type == JTokenType.Array)
-                    director = directorToken.FirstOrDefault()?["name_en"]?.ToString();
-                else
-                    director = directorToken.ToString();
-            }
+            int? runtimeMinutes = json["runtime_mins"]?.Value<int>();
 
-            // Series: try several possible field names
-            string? series = json["series_name_en"]?.ToString()
-                ?? json["series"]?["name_en"]?.ToString()
-                ?? json["series_name"]?.ToString();
+            // Directors is an array of objects with name_romaji
+            string? director = json["directors"]?.FirstOrDefault()?["name_romaji"]?.ToString();
+            if (string.IsNullOrWhiteSpace(director))
+                director = null;
+
+            string? series = json["series_name_en"]?.ToString();
             if (string.IsNullOrWhiteSpace(series))
                 series = null;
+
+            string? description = json["comment_en"]?.ToString();
+            if (string.IsNullOrWhiteSpace(description))
+                description = null;
+
+            var galleryToken = json["gallery"];
+            var galleryImages = galleryToken != null
+                ? galleryToken.Select(g => g["image_full"]?.ToString() ?? string.Empty).Where(u => !string.IsNullOrWhiteSpace(u))
+                : Enumerable.Empty<string>();
 
             if (title is null || code is null)
             {
@@ -195,14 +201,18 @@ namespace JellyfinJav.Api
                     id: id,
                     code: code,
                     title: title,
+                    titleJa: titleJa,
                     actresses: actresses,
                     genres: genres,
                     studio: studio,
-                    boxArt: boxArt,
                     cover: cover,
+                    coverThumb: coverThumb,
                     releaseDate: releaseDate,
+                    runtimeMinutes: runtimeMinutes,
                     director: director,
-                    series: series);
+                    series: series,
+                    description: description,
+                    galleryImages: galleryImages);
         }
 
         private static string NormalizeActress(string actress)

@@ -1,5 +1,6 @@
 namespace JellyfinJav.Providers.R18Provider
 {
+    using JellyfinJav.Api;
     using MediaBrowser.Controller.Entities;
     using MediaBrowser.Controller.Entities.Movies;
     using MediaBrowser.Controller.Providers;
@@ -7,12 +8,12 @@ namespace JellyfinJav.Providers.R18Provider
     using MediaBrowser.Model.Providers;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using static System.Net.WebRequestMethods;
 
-    /// <summary>The provider for R18 video covers.</summary>
+    /// <summary>The provider for R18 video images.</summary>
     public class R18ImageProvider : IRemoteImageProvider, IHasOrder
     {
         private static readonly HttpClient HttpClient = new HttpClient();
@@ -38,33 +39,49 @@ namespace JellyfinJav.Providers.R18Provider
                 return Array.Empty<RemoteImageInfo>();
             }
 
-            // ps.jpg is the pre-cropped front cover; pl.jpg is the full jacket (front + back).
-            // Prefer ps.jpg so Jellyfin gets a clean poster without needing any image manipulation.
-            var candidateUrls = new[]
-            {
-                $"https://awsimgsrc.dmm.com/dig/digital/video/{id}/{id}ps.jpg",
-                $"https://pics.dmm.co.jp/mono/movie/adult/{id}/{id}ps.jpg",
-                $"https://awsimgsrc.dmm.com/dig/mono/movie/{id}/{id}ps.jpg",
-                $"https://awsimgsrc.dmm.com/dig/digital/video/{id}/{id}pl.jpg",
-                $"https://pics.dmm.co.jp/mono/movie/adult/{id}/{id}pl.jpg",
-            };
-
-            var primaryImage = await this.GetValidImageUrl(candidateUrls, cancelToken);
-
-            if (string.IsNullOrEmpty(primaryImage))
+            var video = await R18Client.LoadVideo(id).ConfigureAwait(false);
+            if (!video.HasValue)
             {
                 return Array.Empty<RemoteImageInfo>();
             }
 
-            return new[]
+            var images = new List<RemoteImageInfo>();
+
+            // Primary poster: prefer the pre-cropped thumb, fall back to full jacket.
+            var primaryUrl = video.Value.CoverThumb ?? video.Value.Cover;
+            if (!string.IsNullOrEmpty(primaryUrl))
             {
-                new RemoteImageInfo
+                images.Add(new RemoteImageInfo
                 {
                     ProviderName = this.Name,
                     Type = ImageType.Primary,
-                    Url = primaryImage,
-                },
-            };
+                    Url = primaryUrl,
+                });
+            }
+
+            // Full jacket as an Art/Box image.
+            if (!string.IsNullOrEmpty(video.Value.Cover))
+            {
+                images.Add(new RemoteImageInfo
+                {
+                    ProviderName = this.Name,
+                    Type = ImageType.Art,
+                    Url = video.Value.Cover,
+                });
+            }
+
+            // Gallery images as backdrops.
+            foreach (var galleryUrl in video.Value.GalleryImages)
+            {
+                images.Add(new RemoteImageInfo
+                {
+                    ProviderName = this.Name,
+                    Type = ImageType.Backdrop,
+                    Url = galleryUrl,
+                });
+            }
+
+            return images;
         }
 
         /// <inheritdoc />
@@ -76,45 +93,10 @@ namespace JellyfinJav.Providers.R18Provider
         /// <inheritdoc />
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
-            return new[] { ImageType.Primary };
+            return new[] { ImageType.Primary, ImageType.Art, ImageType.Backdrop };
         }
 
         /// <inheritdoc />
         public bool Supports(BaseItem item) => item is Movie;
-
-        private async Task<string?> GetValidImageUrl(IEnumerable<string> imageFormats, CancellationToken cancellationToken)
-        {
-            foreach (var imageUrl in imageFormats)
-            {
-                try
-                {
-                    using (var client = new HttpClient())
-                    using (var response = await client.GetAsync(imageUrl, cancellationToken))
-                    {
-                        if (response.IsSuccessStatusCode)
-                        {
-                            // If the response is successful, return the URL
-                            return imageUrl;
-                        }
-                    }
-                }
-                catch (HttpRequestException)
-                {
-                    // Ignore HttpRequestException and try the next URL
-                }
-                catch (OperationCanceledException)
-                {
-                    // If the operation is canceled, propagate the cancellation
-                    throw;
-                }
-                catch (Exception)
-                {
-                    // Ignore other exceptions and try the next URL
-                }
-            }
-
-            // If no valid image URL is found, return null
-            return null;
-        }
     }
 }
