@@ -19,7 +19,7 @@ meta = {
     "guid": "1d5fffc2-1028-4553-9660-bd4966899e44",
     "name": "JellyfinJav",
     "description": "JAV metadata providers for Jellyfin.",
-    "owner": "Kyuhaku",
+    "owner": "saiklo (fork of kyuhaku)",
     "overview": "JAV metadata providers for Jellyfin.",
     "targetAbi": f"{targetAbi}.0",
     "timestamp": timestamp,
@@ -38,7 +38,7 @@ subprocess.run([
 ])
 
 shutil.copy("JellyfinJav/bin/Release/net80/JellyfinJav.dll", f"release/{version}/")
-shutil.copy(f"{Path.home()}/.nuget/packages/anglesharp/1.1.2/lib/netstandard2.0/AngleSharp.dll", f"release/{version}/")
+shutil.copy(f"{Path.home()}/.nuget/packages/anglesharp/1.1.2/lib/net8.0/AngleSharp.dll", f"release/{version}/")
 
 shutil.make_archive(f"release/jellyfinjav_{version}", "zip", f"release/{version}/")
 
@@ -46,7 +46,7 @@ entry = {
     "checksum": md5(open(f"release/jellyfinjav_{version}.zip", "rb").read()).hexdigest(),
     "changelog": "",
     "targetAbi": f"{targetAbi}.0",
-    "sourceUrl": f"https://github.com/Kyuhaku/JellyfinJAV/releases/download/{version}/jellyfinjav_{version}.zip",
+    "sourceUrl": f"https://github.com/saiklo/JellyfinJAV/releases/download/{version}/jellyfinjav_{version}.zip",
     "timestamp": timestamp,
     "version": version
 }

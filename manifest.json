@@ -8,6 +8,14 @@
         "overview": "JAV metadata providers for Jellyfin.",
         "versions": [
             {
+                "checksum": "6e17dc450d186cc3a469ec601a09f494",
+                "changelog": "",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/saiklo/JellyfinJAV/releases/download/2026.06.02.1/jellyfinjav_2026.06.02.1.zip",
+                "timestamp": "2026-06-02T15:17:26Z",
+                "version": "2026.06.02.1"
+            },
+            {
                 "checksum": "88c20acc9b9141fc9a027b9105af8b85",
                 "changelog": "Improved filename code extraction: optional hyphen, trailing suffix stripping, DSVR -> 3DSVR remapping.",
                 "targetAbi": "10.10.7.0",
