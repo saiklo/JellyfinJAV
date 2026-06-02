@@ -42,17 +42,19 @@ namespace JellyfinJav.Providers
         /// <returns>The video's jav code.</returns>
         public static string? ExtractCodeFromFilename(string filename)
         {
-            var rx = new Regex(@"([A-Za-z]+)-(\d+)", RegexOptions.Compiled);
+            var rx = new Regex(@"([A-Za-z]+)-?(\d+)(?:-\d+)?(?:[A-Za-z]+)?", RegexOptions.Compiled);
             var match = rx.Match(filename);
             if (match.Success)
             {
                 string letters = match.Groups[1].Value;
                 string digits = match.Groups[2].Value;
 
-                // Convert lowercase letters to uppercase
                 letters = letters.ToUpper();
 
-                return $"{letters}-{digits}"; // Include hyphen between letters and digits
+                if (letters == "DSVR")
+                    letters = "3DSVR";
+
+                return $"{letters}-{digits}";
             }
 
             return filename;
