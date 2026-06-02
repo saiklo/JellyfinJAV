@@ -44,19 +44,28 @@ namespace JellyfinJav.Providers.R18Provider
         {
             this.logger.LogInformation("[JellyfinJav] R18 - processing: " + info.Name);
 
-            Api.Video? video;
-            if (info.ProviderIds.ContainsKey("R18"))
-            {
-                this.logger.LogInformation("[JellyfinJav] R18 - Loading by ID: " + info.ProviderIds["R18"]);
-                video = await R18Client.LoadVideo(info.ProviderIds["R18"]).ConfigureAwait(false);
-            }
-            else
-            {
-                // Use the raw file path — unaffected by any prior metadata rewrite of info.Name.
-                var fileName = string.IsNullOrEmpty(info.Path)
-                    ? info.Name
-                    : Path.GetFileNameWithoutExtension(info.Path);
+            var fileName = string.IsNullOrEmpty(info.Path)
+                ? info.Name
+                : Path.GetFileNameWithoutExtension(info.Path);
 
+            Api.Video? video = null;
+
+            if (info.ProviderIds.TryGetValue("R18", out var storedId))
+            {
+                this.logger.LogInformation("[JellyfinJav] R18 - Loading by stored ID: " + storedId);
+                var (v, error) = await R18Client.LoadVideoWithError(storedId).ConfigureAwait(false);
+                if (v.HasValue)
+                {
+                    video = v;
+                }
+                else
+                {
+                    this.logger.LogWarning("[JellyfinJav] R18 - LoadVideo failed ({Error}), falling back to filename search", error);
+                }
+            }
+
+            if (!video.HasValue)
+            {
                 var code = Providers.Utility.ExtractCodeFromFilename(fileName);
                 if (code is null)
                 {
@@ -70,7 +79,7 @@ namespace JellyfinJav.Providers.R18Provider
 
             if (!video.HasValue)
             {
-                this.logger.LogInformation("[JellyfinJav] R18 - No result found");
+                this.logger.LogInformation("[JellyfinJav] R18 - No result found for: " + fileName);
                 return new MetadataResult<Movie>();
             }
 
